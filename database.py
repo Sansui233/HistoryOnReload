@@ -2,10 +2,12 @@ import time
 import typing
 
 from sqlalchemy import (
+    and_,
     case,
     delete,
     literal_column,
     select,
+    update,
 )
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -96,6 +98,35 @@ class HistoryDataBase:
                 # .order_by(ConversationSchema.timestamp.desc())
             )
             return result.scalars().all()
+
+    async def update_in_use_status(
+        self, target_session_name: str, exclude_uuid: str
+    ) -> int:
+        """
+        更新所有 session_name 等于目标值且 uuid 不等于排除值的条目的 in_use 为 False
+        返回更新的条目数量
+        """
+        async with AsyncSession(self.engine) as session:
+            try:
+                # 构建更新语句
+                stmt = (
+                    update(ConversationSchema)
+                    .where(
+                        and_(
+                            ConversationSchema.session_name == target_session_name,
+                            ConversationSchema.uuid != exclude_uuid,
+                        )
+                    )
+                    .values(in_use=False)
+                )
+                result = await session.execute(stmt)
+                await session.commit()
+                return result.rowcount
+
+            except Exception as e:
+                # 发生错误时回滚
+                await session.rollback()
+                raise RuntimeError(f"更新失败: {str(e)}") from e
 
     async def del_item_unused(self) -> int:
         """

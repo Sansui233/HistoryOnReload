@@ -104,7 +104,10 @@ class HistoryOnReload(BasePlugin):
                 ConversationItem._from_conversation(saved_conversation),
                 in_use=True,
             )
-            self.ap.logger.info(f"[HistoryOnReload] Upsert result: {res}")
+            await self.db.update_in_use_status(
+                session_name, str(saved_conversation.uuid)
+            )
+            # self.ap.logger.info(f"[HistoryOnReload] Upsert result: {res}")
 
 
 @operator_class(name="load_hist", help="从历史数据中加载", usage="!load_hist")
