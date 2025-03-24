@@ -1,19 +1,19 @@
-# History Conversation plugin for Langbot
+# History On Reload plugin for Langbot
 
-暂时解决后重启程序，重载 LLM 后丢失对话上下文的问题。
+解决重启 langbot、重载 LLM 后丢失对话上下文的问题。
 
 ## 安装方法
 
 配置完成 [LangBot](https://github.com/RockChinQ/LangBot) 主程序后使用管理员账号向机器人发送命令即可安装：
 
 ```
-!plugin get https://github.com/sanxianxiaohuntun/SplitTypingPlugin
+!plugin get https://github.com/Sansui233/HistoryOnReload
 ```
 
 ## 使用方法
 
-- 在 重启程序 后，加载插件自动会载入上次的活跃会话，无需其他操作
-- 在 重载 LLMModel 后，需要手动重载此插件以载入上次的活跃会话（插件无法知道 LLMModel 被重载了）
+- 在 重启程序 后，加载插件自动会载入上次的活跃会话
+- 在 重载 LLMModel 文件后，需要手动重载插件以载入上次的活跃会话（因为插件无法知道 LLMModel 被重载了）
 
 判定机制是没有任何
 数据存储在 data/plugins/HistoryOnReload.db 中。
