@@ -94,8 +94,8 @@ class HistoryDataBase:
         async with AsyncSession(self.engine) as conn:
             result = await conn.execute(
                 select(ConversationSchema)
-                # .where(ConversationSchema.in_use.is_(True))
-                # .order_by(ConversationSchema.timestamp.desc())
+                .where(ConversationSchema.in_use.is_(True))
+                .order_by(ConversationSchema.timestamp.desc())
             )
             return result.scalars().all()
 
