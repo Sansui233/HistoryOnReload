@@ -3,7 +3,7 @@ import os
 import typing
 import uuid
 
-from pkg.core.entities import Query, Session
+from pkg.core.entities import LauncherTypes, Query, Session
 from pkg.plugin.context import APIHost, BasePlugin, EventContext, handler, register
 from pkg.plugin.events import NormalMessageResponded
 from plugins.HistoryOnReload.database import HistoryDataBase
@@ -40,7 +40,8 @@ class HistoryOnReload(BasePlugin):
             items = await self.db.get_in_use_conversations()
 
             for item in items:
-                conversation_item = typing.cast(ConversationSchema, item.conversation)
+                item = typing.cast(ConversationSchema, item)
+                conversation_item = typing.cast(ConversationItem, item.conversation)
                 conversation_item = conversation_item._to_conversation(
                     use_model=await self.ap.model_mgr.get_model_by_name(
                         self.ap.provider_cfg.data["model"]
@@ -65,6 +66,10 @@ class HistoryOnReload(BasePlugin):
                 self.ap.sess_mgr.session_list.append(session)
 
             self.ap.logger.info(f"[HistoryOnReload] 加载 {len(items)} 个活跃会话\n")
+            for s in self.ap.sess_mgr.session_list:
+                self.ap.logger.info(
+                    f"[HistoryOnReload] 会话 {str(s.launcher_type.value)}_{s.launcher_id} message 数： {len(s.using_conversation.messages)}"  # type:ignore
+                )
 
             # 清理数据库中不活跃的会话
             await self.db.del_item_unused()
@@ -101,6 +106,9 @@ class HistoryOnReload(BasePlugin):
             # self.ap.logger.info(f"[HistoryOnReload] Upsert result: {res}")
 
 
-def parse_session_name(session_name: str) -> tuple[str, str]:
+def parse_session_name(session_name: str) -> tuple[LauncherTypes, str]:
     launcher_type, launcher_id = session_name.split("_", 1)
+    launcher_type = (
+        LauncherTypes.PERSON if launcher_type == "person" else LauncherTypes.GROUP
+    )
     return (launcher_type, launcher_id)
