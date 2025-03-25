@@ -93,6 +93,7 @@ class HistoryOnReload(BasePlugin):
 
         # append current
         saved_conversation = conversation.copy()
+        saved_conversation.messages = saved_conversation.messages.copy()
         if ctx.event.query.user_message and ctx.event.query.resp_messages:
             saved_conversation.messages.append(ctx.event.query.user_message)
             saved_conversation.messages.extend(ctx.event.query.resp_messages)  # type: ignore . message chain 是 iterable 的
