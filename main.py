@@ -6,8 +6,8 @@ import uuid
 from pkg.core.entities import LauncherTypes, Query, Session
 from pkg.plugin.context import APIHost, BasePlugin, EventContext, handler, register
 from pkg.plugin.events import NormalMessageResponded
-from plugins.HistoryOnReload.database import HistoryDataBase
-from plugins.HistoryOnReload.type import ConversationItem, ConversationSchema
+from .database import HistoryDataBase
+from .type import ConversationItem, ConversationSchema
 
 
 @register(
@@ -43,9 +43,6 @@ class HistoryOnReload(BasePlugin):
                 item = typing.cast(ConversationSchema, item)
                 conversation_item = typing.cast(ConversationItem, item.conversation)
                 conversation_item = conversation_item._to_conversation(
-                    use_model=await self.ap.model_mgr.get_model_by_name(
-                        self.ap.provider_cfg.data["model"]
-                    ),
                     use_funcs=await self.ap.tool_mgr.get_all_functions(
                         plugin_enabled=True,
                     ),
@@ -53,8 +50,8 @@ class HistoryOnReload(BasePlugin):
                 (launcher_type, launcher_id) = parse_session_name(
                     item.session_name  # type: ignore
                 )
-                session_concurrency = self.ap.system_cfg.data["session-concurrency"][
-                    "default"
+                session_concurrency = self.ap.instance_config.data["concurrency"][
+                    "session"
                 ]
                 session = Session(
                     launcher_type=launcher_type,  # type: ignore
@@ -82,7 +79,7 @@ class HistoryOnReload(BasePlugin):
         session_name = (
             f"{ctx.event.query.launcher_type.value}_{ctx.event.query.launcher_id}"
         )
-        conversation = await self.ap.sess_mgr.get_conversation(evt.session)
+        conversation = await self.ap.sess_mgr.get_conversation(evt.query, evt.session, evt.query.pipeline_config['ai']['local-agent']['prompt'], evt.query.pipeline_uuid, evt.query.bot_uuid)
         if conversation.uuid is None:
             conversation.uuid = str(uuid.uuid4())
 
