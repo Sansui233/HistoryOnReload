@@ -12,23 +12,24 @@ from sqlalchemy import (
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-from plugins.HistoryOnReload.type import Base, ConversationItem, ConversationSchema
+from .type import Base, ConversationItem, ConversationSchema
 
 
 # DB CURD，需要 sqlite > 3.24
+async def _init_db(db_path: str):
+    engine = create_async_engine(f"sqlite+aiosqlite:///{db_path}")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        await conn.commit()
+    return engine
+
+
 class HistoryDataBase:
     def __init__(self):
-        pass
+        self.engine = None
 
     async def initialize(self, db_path: str):
-        self.engine = await self._init_db(db_path)
-
-    async def _init_db(self, db_path: str):
-        engine = create_async_engine(f"sqlite+aiosqlite:///{db_path}")
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-            await conn.commit()
-        return engine
+        self.engine = await _init_db(db_path)
 
     async def upsert_conversation(
         self,
@@ -71,7 +72,7 @@ class HistoryDataBase:
             await conn.commit()
             return row.operation if row else False
 
-    async def get_conversaion(self, session_name: str) -> ConversationSchema | None:
+    async def get_conversation(self, session_name: str) -> ConversationSchema | None:
         async with AsyncSession(self.engine) as conn:
             result = await conn.execute(
                 select(ConversationSchema)

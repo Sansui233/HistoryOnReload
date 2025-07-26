@@ -9,7 +9,6 @@ from sqlalchemy.orm import declarative_base
 from pkg.core import entities as core_entities
 from pkg.provider import entities as llm_entities
 from pkg.provider.modelmgr import entities
-from pkg.provider.sysprompt import entities as sysprompt_entities
 from pkg.provider.tools import entities as tools_entities
 
 
@@ -44,7 +43,7 @@ Base = declarative_base()
 class ConversationItem(pydantic.BaseModel):
     """对话，包含于 Session 中，一个 Session 可以有多个历史 Conversation，但只有一个当前使用的 Conversation"""
 
-    prompt: sysprompt_entities.Prompt
+    pre_prompt: list[llm_entities.Message]
 
     messages: list[llm_entities.Message]
 
